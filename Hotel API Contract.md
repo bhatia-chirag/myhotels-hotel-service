@@ -249,16 +249,7 @@
   Authorization: Bearer `<JWT Token>`
 * **Success Response:**  
 * **Code:** 200  
-  **Content:**  
-```
-{
-  orders: [
-           {<order_object>},
-           {<order_object>},
-           {<order_object>}
-         ]
-}
-```
+  **Content:** `{ success }`
 * **Error Response:**  
   * **Code:** 404  
   **Content:** `{ error : "Hotel doesn't exist" }`  
