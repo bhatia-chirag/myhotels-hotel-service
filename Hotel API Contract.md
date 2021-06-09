@@ -144,6 +144,27 @@
   * **Code:** 403  
   **Content:** `{ error : "Invalid request. Please check date format." }`
 
+**POST /hotels/login**
+----
+  Checks the credentials and issues a JWT token.
+* **URL Params**
+  None
+* **Headers**
+  None
+* **Data Params**
+  None
+* **Success Response:**
+* **Code:** 200
+  **Content:**
+```
+  {
+    jwt: string
+  }
+```
+* **Error Response:**  
+* **Code:** 403  
+  **Content:** `{ error : "Invalid username or password." }`
+
 **POST /hotels/add**
 ----
   Creates a new Hotel and returns the new object.
@@ -157,7 +178,7 @@
 * **Code:** 200  
   **Content:**  `{ <hotel_object> }` 
 * **Error Response:**  
-  * **Code:** 403  
+* **Code:** 401  
   **Content:** 
 ```
   { 
@@ -166,7 +187,7 @@
   }
 ```  
   OR
-  * **Code:** 401  
+  * **Code:** 403  
   **Content:** `{ error : "You are unauthorized to make this request." }`
 
 **PUT /hotels/:name?param="new_value"**
@@ -184,7 +205,7 @@
   * **Code:** 404  
   **Content:** `{ error : "Hotel doesn't exist" }`  
   OR  
-  * **Code:** 401  
+  * **Code:** 403  
   **Content:** `{ error : "You are unauthorized to make this request." }`
 
 **DELETE /hotels/:name**
@@ -203,5 +224,46 @@
   * **Code:** 404  
   **Content:** `{ error : "Hotel doesn't exist" }`  
   OR  
+  * **Code:** 403  
+  **Content:** `{ error : "You are unauthorized to make this request." }`
+
+**POST /hotels/:name/:room-type/date/:start/:end**
+----
+  Creates and updates records for room availability associated with the specified hotel.
+* **URL Params**  
+  *Required:* `hotel=[string]`
+  *Required:* `room-type=[string]`
+  *Required:* `start=[datetime(iso 8601)]`
+  *Required:* `end=[datetime(iso 8601)]`
+* **Data Params**  
+  None
+* **Headers**  
+  Content-Type: application/json  
+  Authorization: Bearer `<JWT Token>`
+* **Success Response:**  
+* **Code:** 200  
+  **Content:**  
+```
+{
+  orders: [
+           {<order_object>},
+           {<order_object>},
+           {<order_object>}
+         ]
+}
+```
+* **Error Response:**  
+  * **Code:** 404  
+  **Content:** `{ error : "Hotel doesn't exist" }`  
+  OR
+  * **Code:** 404  
+  **Content:** `{ error : "Room type doesn't exist for specified hotel." }`  
+  OR  
   * **Code:** 401  
+  **Content:** `{ error : "Invalid request. Please check date format." }`
+  OR  
+  * **Code:** 401  
+  **Content:** `{ error : "Oops! Selected room type is not available anymore on these dates. Please check the dates and hotel availability and try again." }`
+  OR  
+  * **Code:** 403  
   **Content:** `{ error : "You are unauthorized to make this request." }`
