@@ -18,6 +18,13 @@
          ]
 }
 ```
+* Hotel object
+```
+{
+  roomType: string
+  availability: integer
+}
+```
 **GET /hotels**
 ----
   Returns all active hotels in the system.
@@ -96,10 +103,10 @@
   **Content:**  
 ```
 {
-  orders: [
-           {<order_object>},
-           {<order_object>},
-           {<order_object>}
+  availabilities: [
+           {<availablity_object>},
+           {<availablity_object>},
+           {<availablity_object>}
          ]
 }
 ```
@@ -127,10 +134,10 @@
   **Content:**  
 ```
 {
-  orders: [
-           {<order_object>},
-           {<order_object>},
-           {<order_object>}
+  availabilities: [
+           {<availablity_object>},
+           {<availablity_object>},
+           {<availablity_object>}
          ]
 }
 ```
