@@ -18,7 +18,7 @@
          ]
 }
 ```
-* Hotel object
+* Availability object
 ```
 {
   roomType: string
@@ -70,6 +70,14 @@
 }
 ```
 * **Error Response:**
+  * **Code:** 403  
+  **Content:** `{ error : "You are not authorized to perform this request." }`
+  OR
+  * **Code:** 404  
+  **Content:** `{ error : "Hotel not found for specified value." }`
+  OR
+  * **Code:** 400  
+  **Content:** `{ error : "Invalid request. Please check the request and try again." }`
 
 **GET /hotels/:name**
 ----
@@ -84,7 +92,7 @@
 * **Code:** 200  
   **Content:**  `{ <hotel_object> }` 
 * **Error Response:**  
-  * **Code:** 403  
+  * **Code:** 400  
   **Content:** `{ error : "Invalid request. Please check date format." }`
 
 **GET /hotels/:name/date/:start/:end**
