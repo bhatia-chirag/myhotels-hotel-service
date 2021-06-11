@@ -6,5 +6,6 @@ import org.springframework.http.ResponseEntity;
 import java.util.List;
 
 public interface HotelController {
-    public ResponseEntity<List<HotelDto>> getAllActiveHotels();
+    ResponseEntity<List<HotelDto>> getAllActiveHotels();
+    ResponseEntity<List<HotelDto>> getAllHotelsByStatus(boolean active);
 }

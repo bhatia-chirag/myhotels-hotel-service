@@ -13,10 +13,8 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import java.util.ArrayList;
-import java.util.stream.Collectors;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
@@ -25,7 +23,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @ExtendWith(SpringExtension.class)
 @WebMvcTest(HotelControllerImpl.class)
-public class HotelControllerTests {
+class HotelControllerTests {
 
     @Autowired
     private MockMvc mockMvc;
@@ -42,13 +40,13 @@ public class HotelControllerTests {
     @BeforeEach
     private void setup() {
         hotels = new ArrayList<>();
-        Hotel hotel = new Hotel(1234l, "name", "desc", "location", true);
+        Hotel hotel = new Hotel(1234L, "name", "desc", "location", true);
         hotels.add(hotel);
         hotelDto = new HotelDto("name", "desc", "location", true, null);
     }
 
     @Test
-    public void testGetAllAvailableHotels() throws Exception {
+    void testGetAllActiveHotels() throws Exception {
 
         given(service.getAllHotelsByStatus(anyBoolean())).willReturn(hotels);
         given(mapper.hotelToHotelDto(any())).willReturn(hotelDto);
@@ -59,12 +57,44 @@ public class HotelControllerTests {
     }
 
     @Test
-    public void testGetAllActiveHotels_null() throws Exception {
+    void testGetAllActiveHotels_null() throws Exception {
         given(service.getAllHotelsByStatus(anyBoolean())).willReturn(null);
 
         mockMvc.perform(MockMvcRequestBuilders.get("/hotels/"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$").doesNotExist());
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("message").value("No hotel found."));
     }
 
+    @Test
+    void testGetAllHotelsByStatus() throws Exception {
+
+        given(service.getAllHotelsByStatus(anyBoolean())).willReturn(hotels);
+        given(mapper.hotelToHotelDto(any())).willReturn(hotelDto);
+
+        mockMvc.perform(MockMvcRequestBuilders.get("/hotels/active/true"))
+                .andExpect(status().isOk())
+                .andExpect(content().json("[{\"name\":\"name\",\"description\":\"desc\",\"location\":\"location\",\"status\":true,\"rooms\":null}]"));
+
+    }
+
+    @Test
+    void testGetAllHotelsByStatus_null() throws Exception {
+        given(service.getAllHotelsByStatus(anyBoolean())).willReturn(null);
+
+        mockMvc.perform(MockMvcRequestBuilders.get("/hotels/active/true"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("message").value("No hotel found for specified value."));
+        mockMvc.perform(MockMvcRequestBuilders.get("/hotels/active/false"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("message").value("No hotel found for specified value."));
+    }
+
+    @Test
+    void testGetAllHotelsByStatus_Exception() throws Exception {
+        given(service.getAllHotelsByStatus(anyBoolean())).willReturn(null);
+
+        mockMvc.perform(MockMvcRequestBuilders.get("/hotels/active/abcd"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("message").value("Invalid request. Please check the request and try again"));
+    }
 }
