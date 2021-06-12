@@ -1,8 +1,12 @@
 package com.myhotels.hotel.entities;
 
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import javax.persistence.*;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -16,7 +20,7 @@ public class Hotel {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
-    @Column
+    @Column(unique = true)
     private String name;
 
     @Column
@@ -27,5 +31,9 @@ public class Hotel {
 
     @Column
     private boolean status;
+
+    @OneToMany
+    @JoinColumn(name = "hotel_id")
+    private Set<Room> rooms;
 
 }

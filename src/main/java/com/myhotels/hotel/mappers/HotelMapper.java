@@ -8,7 +8,6 @@ import org.mapstruct.Mapper;
 public interface HotelMapper {
 
     HotelDto hotelToHotelDto(Hotel hotel);
-
     Hotel hotelDtoToHotel(HotelDto hotelDto);
 
 }

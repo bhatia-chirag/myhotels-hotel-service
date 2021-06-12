@@ -8,4 +8,5 @@ import java.util.List;
 public interface HotelController {
     ResponseEntity<List<HotelDto>> getAllActiveHotels();
     ResponseEntity<List<HotelDto>> getAllHotelsByStatus(boolean active);
+    ResponseEntity<HotelDto> getHotelByName(String name);
 }

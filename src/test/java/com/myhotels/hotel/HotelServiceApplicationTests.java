@@ -1,5 +1,6 @@
 package com.myhotels.hotel;
 
+import com.myhotels.hotel.dtos.HotelDto;
 import com.myhotels.hotel.dtos.errors.ApiError;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,6 +46,14 @@ class HotelServiceApplicationTests {
 		assertEquals(HttpStatus.BAD_REQUEST, entity.getStatusCode());
 		assertNotNull(entity.getBody());
 		assertEquals("Invalid request. Please check the request and try again", entity.getBody().getMessage());
+	}
+
+	@Test
+	void testGetHotelByName() {
+
+		ResponseEntity<HotelDto> entity = restTemplate.getForEntity("/hotels/name/myhotel1", HotelDto.class);
+		assertEquals(HttpStatus.OK, entity.getStatusCode());
+
 	}
 
 }

@@ -1,8 +1,11 @@
 package com.myhotels.hotel.dtos;
 
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-import java.util.List;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -14,6 +17,6 @@ public class HotelDto {
     private String description;
     private String location;
     private boolean status;
-    private List<RoomDto> rooms;
+    private Set<RoomDto> rooms;
 
 }

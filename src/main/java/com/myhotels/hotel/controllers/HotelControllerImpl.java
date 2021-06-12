@@ -52,4 +52,11 @@ public class HotelControllerImpl implements HotelController {
             return ResponseEntity.ok(hotelDtos);
         }
     }
+
+    @GetMapping("/name/{name}")
+    @Override
+    public ResponseEntity<HotelDto> getHotelByName(@PathVariable(name = "name") String name) {
+        Hotel hotel = service.getHotelByName(name);
+        return ResponseEntity.ok(hotelMapper.hotelToHotelDto(hotel));
+    }
 }

@@ -4,6 +4,7 @@
 {
   roomType: string
   total: integer
+  price: integer
 }
 ```
 * Hotel object

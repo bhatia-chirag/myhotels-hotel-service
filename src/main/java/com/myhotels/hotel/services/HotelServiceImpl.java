@@ -17,4 +17,9 @@ public class HotelServiceImpl implements HotelService {
     public List<Hotel> getAllHotelsByStatus(boolean status) {
         return repo.findByStatus(status);
     }
+
+    @Override
+    public Hotel getHotelByName(String name) {
+        return repo.findByName(name);
+    }
 }
