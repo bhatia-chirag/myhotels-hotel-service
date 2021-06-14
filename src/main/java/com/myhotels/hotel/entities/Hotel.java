@@ -32,7 +32,7 @@ public class Hotel {
     @Column
     private boolean status;
 
-    @OneToMany
+    @OneToMany(cascade = CascadeType.PERSIST)
     @JoinColumn(name = "hotel_id")
     private Set<Room> rooms;
 

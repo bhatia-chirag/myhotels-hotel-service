@@ -6,8 +6,6 @@ import javax.persistence.*;
 
 @Getter
 @Setter
-@NoArgsConstructor
-@AllArgsConstructor
 @Entity
 @Table(name = "room_info")
 public class Room {
@@ -24,5 +22,8 @@ public class Room {
 
     @Column(nullable = false)
     private int price;
+
+    @Column(name = "hotel_id", nullable = false)
+    private Long hotelId;
 
 }

@@ -2,6 +2,7 @@ package com.myhotels.hotel.utilities;
 
 import com.myhotels.hotel.dtos.errors.ApiError;
 import com.myhotels.hotel.exceptions.DataNotFoundException;
+import com.myhotels.hotel.exceptions.InvalidRequestException;
 import lombok.extern.java.Log;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,7 +16,7 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 public class ExceptionInterceptor extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
-    protected ResponseEntity<ApiError> handleMethodArgumentTypeMismatchException(MethodArgumentTypeMismatchException ex) {
+    protected final ResponseEntity<ApiError> handleMethodArgumentTypeMismatchException(MethodArgumentTypeMismatchException ex) {
         log.warning(ex.getMessage());
 
         Throwable rootCause = ex.getRootCause();
@@ -27,10 +28,15 @@ public class ExceptionInterceptor extends ResponseEntityExceptionHandler {
     }
 
     @ExceptionHandler(DataNotFoundException.class)
-    public final ResponseEntity<Object> handleDataNotFoundException(DataNotFoundException ex) {
+    protected final ResponseEntity<ApiError> handleDataNotFoundException(DataNotFoundException ex) {
         log.warning(ex.getMessage());
 
         return new ResponseEntity<>(new ApiError(ex.getMessage(), ex.getMessage()), HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(InvalidRequestException.class)
+    protected final ResponseEntity<ApiError> handleInvalidRequestException(InvalidRequestException ex) {
+        return new ResponseEntity<>(new ApiError(ex.getMessage(), ex.getMessage()), HttpStatus.BAD_REQUEST);
     }
 
 }

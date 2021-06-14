@@ -82,7 +82,7 @@ Returns all hotels based on specified active value.
 
 **GET /hotels/:name**
 ----
-Returns the specified hotel.
+Returns the specified hotel if active.
 * **URL Params**  
   *Required:* `hotel=[string]`
 * **Data Params**  
@@ -126,7 +126,7 @@ Returns all room types availability associated with the specified hotel.
     * **Code:** 404  
       **Content:** `{ error : "Hotel doesn't exist" }`  
       OR
-    * **Code:** 403  
+    * **Code:** 400  
       **Content:** `{ error : "Invalid request. Please check date format." }`
 
 **GET /hotels/:name/:room-type/date/:start/:end**
