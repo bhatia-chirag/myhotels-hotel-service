@@ -117,4 +117,20 @@ public class HotelServiceImpl implements HotelService {
         hotel.setStatus(false);
         repo.save(hotel);
     }
+
+    @Transactional
+    @Override
+    public void createBooking(String hotelName, String roomType, LocalDate startDate, LocalDate endDate, boolean status) {
+        List<Availability> availabilityList = getAvailabilityByNameAndRoomTypeAndDateAndStatus(hotelName, roomType, startDate, endDate, status);
+        availabilityList.forEach(availability -> {
+            if (availability.getAvailable() <= 0) {
+                throw new InvalidRequestException("Rooms not available for selected dates.");
+            }
+        });
+        List<Availability> availabilities = availabilityList.stream().map(a -> {
+            a.setAvailable(a.getAvailable() - 1);
+            return a;
+        }).collect(Collectors.toList());
+        availabilityRepo.saveAll(availabilities);
+    }
 }

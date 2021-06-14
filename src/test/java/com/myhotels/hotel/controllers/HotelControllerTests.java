@@ -1,7 +1,10 @@
 package com.myhotels.hotel.controllers;
 
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.json.UTF8JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.myhotels.hotel.dtos.AvailabilityDto;
+import com.myhotels.hotel.dtos.BookingDto;
 import com.myhotels.hotel.dtos.HotelDto;
 import com.myhotels.hotel.dtos.RoomDto;
 import com.myhotels.hotel.entities.Availability;
@@ -24,6 +27,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -321,5 +325,52 @@ class HotelControllerTests {
         mockMvc.perform(MockMvcRequestBuilders
                 .delete("/hotels/name/" + hotel.getName()))
                 .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void testCreateHotelBooking() throws Exception {
+        BookingDto bookingDto = new BookingDto();
+        bookingDto.setHotelName(hotel.getName());
+        bookingDto.setRoomType(room1.getRoomType());
+        bookingDto.setStartDate(LocalDate.now());
+        bookingDto.setEndDate(LocalDate.now().plusDays(5));
+
+        mockMvc.perform(MockMvcRequestBuilders
+        .post("/hotels/booking/bookingId")
+        .content(new ObjectMapper().writeValueAsString(bookingDto))
+        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void testCreateHotelBooking_dateLessThanToday() throws Exception {
+        BookingDto bookingDto = new BookingDto();
+        bookingDto.setHotelName(hotel.getName());
+        bookingDto.setRoomType(room1.getRoomType());
+        bookingDto.setStartDate(LocalDate.now().minusDays(1));
+        bookingDto.setEndDate(LocalDate.now().plusDays(5));
+
+        mockMvc.perform(MockMvcRequestBuilders
+                .post("/hotels/booking/bookingId")
+                .content(new ObjectMapper().writeValueAsString(bookingDto))
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("message").value("Start date cannot be less than today's date."));
+    }
+
+    @Test
+    void testCreateHotelBooking_startDateLessThanEndDate() throws Exception {
+        BookingDto bookingDto = new BookingDto();
+        bookingDto.setHotelName(hotel.getName());
+        bookingDto.setRoomType(room1.getRoomType());
+        bookingDto.setStartDate(LocalDate.now().plusDays(10));
+        bookingDto.setEndDate(LocalDate.now().plusDays(5));
+
+        mockMvc.perform(MockMvcRequestBuilders
+                .post("/hotels/booking/bookingId")
+                .content(new ObjectMapper().writeValueAsString(bookingDto))
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("message").value("Start date cannot be less than and equal to end date."));
     }
 }

@@ -1,6 +1,7 @@
 package com.myhotels.hotel.controllers;
 
 import com.myhotels.hotel.dtos.AvailabilityDto;
+import com.myhotels.hotel.dtos.BookingDto;
 import com.myhotels.hotel.dtos.HotelDto;
 import com.myhotels.hotel.entities.Availability;
 import com.myhotels.hotel.entities.Hotel;
@@ -9,6 +10,7 @@ import com.myhotels.hotel.exceptions.InvalidRequestException;
 import com.myhotels.hotel.mappers.AvailabilityMapper;
 import com.myhotels.hotel.mappers.HotelMapper;
 import com.myhotels.hotel.services.HotelService;
+import lombok.extern.java.Log;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@Log
 @RestController
 @RequestMapping("/hotels")
 public class HotelControllerImpl implements HotelController {
@@ -133,5 +136,21 @@ public class HotelControllerImpl implements HotelController {
     public ResponseEntity<Void> deleteHotel(@PathVariable("name") String name) {
         service.deactivateHotel(name);
         return ResponseEntity.noContent().lastModified(ZonedDateTime.now()).build();
+    }
+
+    @PostMapping("/booking/{bookingId}")
+    @Override
+    public ResponseEntity<BookingDto> createHotelBooking(@RequestBody BookingDto bookingDto, @PathVariable String bookingId) {
+        log.info("Creating booking for bookingId: "+bookingId);
+        LocalDate startDate = bookingDto.getStartDate();
+        if (startDate.isBefore(LocalDate.now())) {
+            throw new InvalidRequestException("Start date cannot be less than today's date.");
+        }
+        LocalDate endDate = bookingDto.getEndDate();
+        if (endDate.isBefore(startDate) || endDate.isEqual(startDate)) {
+            throw new InvalidRequestException("Start date cannot be less than and equal to end date.");
+        }
+        service.createBooking(bookingDto.getHotelName(), bookingDto.getRoomType(), startDate, endDate, true);
+        return ResponseEntity.ok(bookingDto);
     }
 }

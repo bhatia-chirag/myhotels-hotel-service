@@ -1,5 +1,6 @@
 package com.myhotels.hotel.services;
 
+import com.myhotels.hotel.dtos.BookingDto;
 import com.myhotels.hotel.dtos.RoomDto;
 import com.myhotels.hotel.entities.Availability;
 import com.myhotels.hotel.entities.Hotel;
@@ -135,18 +136,23 @@ class HotelServiceTests {
 
     @Test
     void testGetAvailabilityByNameAndRoomTypeAndDateAndStatus() {
+        availabilitySetup();
+
+        List<Availability> responseAvailabilitiesList = service.getAvailabilityByNameAndRoomTypeAndDateAndStatus(
+                "name", room1.getRoomType(), LocalDate.now().plusDays(1), LocalDate.now().plusDays(5), true);
+        assertNotNull(responseAvailabilitiesList);
+    }
+
+    private void availabilitySetup() {
         given(roomRepo.findByHotelNameAndRoomTypeAndHotelStatus(anyString(), any(), anyBoolean())).willReturn(room1);
         List<Availability> availabilities = new ArrayList<>();
         Availability availability = new Availability();
         availability.setAvailable(9);
         availability.setRoom(room1);
         availability.setDate(LocalDate.now().plusDays(1));
+        availabilities.add(availability);
         given(availabilityRepo.findByRoomAndDateBetween(any(), any(), any()))
                 .willReturn(availabilities);
-
-        List<Availability> responseAvailabilitiesList = service.getAvailabilityByNameAndRoomTypeAndDateAndStatus(
-                "name", room1.getRoomType(), LocalDate.now().plusDays(1), LocalDate.now().plusDays(5), true);
-        assertNotNull(responseAvailabilitiesList);
     }
 
     @Test
@@ -236,6 +242,33 @@ class HotelServiceTests {
             service.deactivateHotel(this.hotel.getName());
         } catch (DataNotFoundException ex) {
             assertEquals("No active hotel exists for specified name.", ex.getMessage());
+        }
+    }
+
+    @Test
+    void testCreateBooking() {
+        availabilitySetup();
+
+        service.createBooking(hotel.getName(), room1.getRoomType(), LocalDate.now(), LocalDate.now().plusDays(5), true);
+        verify(availabilityRepo, times(1)).saveAll(anyList());
+    }
+
+    @Test
+    void testCreateBooking_invalidRequest() {
+        given(roomRepo.findByHotelNameAndRoomTypeAndHotelStatus(anyString(), any(), anyBoolean())).willReturn(room1);
+        List<Availability> availabilities = new ArrayList<>();
+        Availability availability = new Availability();
+        availability.setAvailable(0);
+        availability.setRoom(room1);
+        availability.setDate(LocalDate.now().plusDays(1));
+        availabilities.add(availability);
+        given(availabilityRepo.findByRoomAndDateBetween(any(), any(), any()))
+                .willReturn(availabilities);
+
+        try {
+            service.createBooking(hotel.getName(), room1.getRoomType(), LocalDate.now(), LocalDate.now().plusDays(5), true);
+        } catch (InvalidRequestException ex) {
+            assertEquals("Rooms not available for selected dates.", ex.getMessage());
         }
     }
 
