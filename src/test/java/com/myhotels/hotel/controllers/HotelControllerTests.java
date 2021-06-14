@@ -1,5 +1,6 @@
 package com.myhotels.hotel.controllers;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.myhotels.hotel.dtos.AvailabilityDto;
 import com.myhotels.hotel.dtos.HotelDto;
 import com.myhotels.hotel.dtos.RoomDto;
@@ -15,9 +16,13 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -170,7 +175,7 @@ class HotelControllerTests {
 
         mockMvc.perform(MockMvcRequestBuilders.get("/hotels/name/myhotel1/date/start/" + LocalDate.now().plusDays(5) + "/end/" + LocalDate.now().plusDays(10)))
                 .andExpect(status().isOk())
-                .andExpect(content().json("[[{\"roomType\":\"double\",\"availability\":9}]]"));
+                .andExpect(content().json("[[{\"roomType\":\"double\",\"date\":null,\"available\":9}]]"));
     }
 
     @Test
@@ -181,7 +186,7 @@ class HotelControllerTests {
         mockMvc.perform(MockMvcRequestBuilders.get("/hotels/name/myhotel1/date/start/" + LocalDate.now().plusDays(1) + "/end/" + LocalDate.now().plusDays(5)))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("message")
-                        .value("Hotel name not found."));
+                        .value("Hotel data not found for specified details."));
 
         given(service.getAvailabilityByNameAndDateAndStatus(anyString(), any(), any(), anyBoolean()))
                 .willReturn(new ArrayList<>());
@@ -189,7 +194,7 @@ class HotelControllerTests {
         mockMvc.perform(MockMvcRequestBuilders.get("/hotels/name/myhotel1/date/start/" + LocalDate.now().plusDays(1) + "/end/" + LocalDate.now().plusDays(5)))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("message")
-                        .value("Hotel name not found."));
+                        .value("Hotel data not found for specified details."));
     }
 
     @Test
@@ -225,7 +230,7 @@ class HotelControllerTests {
 
         mockMvc.perform(MockMvcRequestBuilders.get("/hotels/name/myhotel1/roomType/double/date/start/" + LocalDate.now().plusDays(5) + "/end/" + LocalDate.now().plusDays(10)))
                 .andExpect(status().isOk())
-                .andExpect(content().json("[{\"roomType\":\"double\",\"date\":"+LocalDate.now()+",\"availability\":9}]"));
+                .andExpect(content().json("[{\"roomType\":\"double\",\"date\":\"" + LocalDate.now() + "\",\"available\":9}]"));
     }
 
     @Test
@@ -267,5 +272,54 @@ class HotelControllerTests {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("message")
                         .value("Start date cannot be greater than endDate"));
+    }
+
+    @Test
+    void testAddHotel() throws Exception {
+        given(mapper.hotelToHotelDto(any())).willReturn(hotelDto);
+
+        mockMvc.perform(MockMvcRequestBuilders
+                .post("/hotels/add")
+                .content(new ObjectMapper().writeValueAsString(hotelDto))
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.ALL)
+        )
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("name").value(hotelDto.getName()));
+    }
+
+    @Test
+    void addHotel_Exception() throws Exception {
+        given(service.addHotel(any())).willThrow(DataIntegrityViolationException.class);
+
+        mockMvc.perform(MockMvcRequestBuilders
+                .post("/hotels/add")
+                .content(new ObjectMapper().writeValueAsString(hotelDto))
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.ALL)
+        ).andExpect(status().isBadRequest())
+                .andExpect(jsonPath("message")
+                        .value("Invalid request. Correct the root cause and try again."));
+    }
+
+    @Test
+    void editHotel() throws Exception {
+        given(service.updateHotel(anyString(), anyMap())).willReturn(hotel);
+        given(mapper.hotelToHotelDto(any())).willReturn(hotelDto);
+        MultiValueMap<String, String> map = new LinkedMultiValueMap<>();
+        map.add("description", "updated hotel desc");
+
+        mockMvc.perform(MockMvcRequestBuilders
+                .put("/hotels/name/" + hotel.getName())
+                .params(map)
+        ).andExpect(status().isAccepted())
+                .andExpect(jsonPath("description").value(hotelDto.getDescription()));
+    }
+
+    @Test
+    void testDeleteHotel() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders
+                .delete("/hotels/name/" + hotel.getName()))
+                .andExpect(status().isNoContent());
     }
 }

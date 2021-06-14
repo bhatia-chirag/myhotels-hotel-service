@@ -8,11 +8,11 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface RoomRepo extends JpaRepository<Room, Long> {
-    @Query("select ri from Room ri\n" +
-            "join Hotel hi\n" +
-            "on ri.hotelId = hi.id\n" +
+    @Query(value = "select ri.* from room_info ri\n" +
+            "join hotel_info hi\n" +
+            "on ri.hotel_Id = hi.id\n" +
             "where hi.name = :name\n" +
             "and hi.status = :status\n" +
-            "and ri.roomType = :roomType")
+            "and ri.room_type = :roomType", nativeQuery = true)
     Room findByHotelNameAndRoomTypeAndHotelStatus(@Param("name") String name, @Param("roomType") String roomType, @Param("status") boolean status);
 }

@@ -1,6 +1,7 @@
 package com.myhotels.hotel.entities;
 
-import lombok.*;
+import lombok.Getter;
+import lombok.Setter;
 
 import javax.persistence.*;
 
@@ -22,8 +23,5 @@ public class Room {
 
     @Column(nullable = false)
     private int price;
-
-    @Column(name = "hotel_id", nullable = false)
-    private Long hotelId;
 
 }

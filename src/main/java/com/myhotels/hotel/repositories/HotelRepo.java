@@ -11,4 +11,5 @@ public interface HotelRepo extends JpaRepository<Hotel, Long> {
 
     List<Hotel> findByStatus(boolean status);
     Hotel findByNameAndStatus(String name, boolean status);
+    Hotel findByName(String hotelName);
 }

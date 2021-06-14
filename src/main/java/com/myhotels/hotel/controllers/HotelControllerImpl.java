@@ -12,13 +12,13 @@ import com.myhotels.hotel.services.HotelService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import java.net.URI;
 import java.time.LocalDate;
+import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
@@ -81,7 +81,7 @@ public class HotelControllerImpl implements HotelController {
         }
         List<List<Availability>> availabilityListsList = service.getAvailabilityByNameAndDateAndStatus(name, startDate, endDate, true);
         if (availabilityListsList == null || availabilityListsList.isEmpty()) {
-            throw new DataNotFoundException("Hotel name not found.");
+            throw new DataNotFoundException("Hotel data not found for specified details.");
         }
         return availabilityListsList.stream()
                 .map(availabilities -> availabilities.stream()
@@ -107,5 +107,31 @@ public class HotelControllerImpl implements HotelController {
         return availabilities.stream()
                 .map(availability -> availabilityMapper.availabilityToAvailabilityDto(availability))
                 .collect(Collectors.toList());
+    }
+
+    @PostMapping("/add")
+    @Override
+    public ResponseEntity<HotelDto> addHotel(@RequestBody HotelDto requestHotelDto) {
+        Hotel requestHotel = hotelMapper.hotelDtoToHotel(requestHotelDto);
+        Hotel responseHotel = service.addHotel(requestHotel);
+        HotelDto responseDto = hotelMapper.hotelToHotelDto(responseHotel);
+        return ResponseEntity
+                .created(URI.create("/name/" + responseDto.getName()))
+                .body(responseDto);
+    }
+
+    @PutMapping("/name/{name}")
+    @Override
+    public ResponseEntity<HotelDto> editHotel(@PathVariable("name") String name,
+                                              @RequestParam Map<String, String> params) {
+        Hotel updatedHotel = service.updateHotel(name, params);
+        return ResponseEntity.accepted().body(hotelMapper.hotelToHotelDto(updatedHotel));
+    }
+
+    @DeleteMapping("/name/{name}")
+    @Override
+    public ResponseEntity<Void> deleteHotel(@PathVariable("name") String name) {
+        service.deactivateHotel(name);
+        return ResponseEntity.noContent().lastModified(ZonedDateTime.now()).build();
     }
 }
