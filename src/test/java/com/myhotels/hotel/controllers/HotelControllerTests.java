@@ -3,6 +3,7 @@ package com.myhotels.hotel.controllers;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.json.UTF8JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.myhotels.hotel.configs.Messages;
 import com.myhotels.hotel.dtos.AvailabilityDto;
 import com.myhotels.hotel.dtos.BookingDto;
 import com.myhotels.hotel.dtos.HotelDto;
@@ -51,6 +52,8 @@ class HotelControllerTests {
     private HotelMapper mapper;
     @MockBean
     private AvailabilityMapper availabilityMapper;
+    @MockBean
+    private Messages messages;
 
     private List<Hotel> hotels;
     private HotelDto hotelDto;
@@ -99,6 +102,7 @@ class HotelControllerTests {
     @Test
     void testGetAllActiveHotels_null() throws Exception {
         given(service.getAllHotelsByStatus(anyBoolean())).willReturn(null);
+        given(messages.getNoHotelFound()).willReturn("No hotel found.");
 
         mockMvc.perform(MockMvcRequestBuilders.get("/hotels/"))
                 .andExpect(status().isNotFound())
@@ -120,6 +124,7 @@ class HotelControllerTests {
     @Test
     void testGetAllHotelsByStatus_null() throws Exception {
         given(service.getAllHotelsByStatus(anyBoolean())).willReturn(null);
+        given(messages.getHotelNameNotFound()).willReturn("No hotel found for specified value.");
 
         mockMvc.perform(MockMvcRequestBuilders.get("/hotels/active/true"))
                 .andExpect(status().isNotFound())
@@ -154,6 +159,7 @@ class HotelControllerTests {
     @Test
     void testGetHotelByName_NotFound() throws Exception {
         given(service.getHotelByNameAndStatus(anyString(), anyBoolean())).willReturn(null);
+        given(messages.getNoActiveHotelFound()).willReturn("No active hotel found for name: myhotel0");
 
         mockMvc.perform(MockMvcRequestBuilders.get("/hotels/name/myhotel0"))
                 .andExpect(status().isNotFound())
@@ -186,6 +192,7 @@ class HotelControllerTests {
     void testGetAvailabilityByNameAndDate_notFound() throws Exception {
         given(service.getAvailabilityByNameAndDateAndStatus(anyString(), any(), any(), anyBoolean()))
                 .willReturn(null);
+        given(messages.getNoActiveHotelFound()).willReturn("Hotel data not found for specified details.");
 
         mockMvc.perform(MockMvcRequestBuilders.get("/hotels/name/myhotel1/date/start/" + LocalDate.now().plusDays(1) + "/end/" + LocalDate.now().plusDays(5)))
                 .andExpect(status().isNotFound())
@@ -203,6 +210,8 @@ class HotelControllerTests {
 
     @Test
     void testGetAvailabilityByNameAndDate_wrongStartDate() throws Exception {
+        given(messages.getStartDateLessThanToday()).willReturn("Start date cannot be less than today");
+
         mockMvc.perform(MockMvcRequestBuilders.get("/hotels/name/myhotel1/date/start/" + LocalDate.now().minusDays(1) + "/end/" + LocalDate.now().plusDays(5)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("message")
@@ -211,6 +220,8 @@ class HotelControllerTests {
 
     @Test
     void testGetAvailabilityByNameAndDate_wrongEndDate() throws Exception {
+        given(messages.getStartDateGreaterThanEnd()).willReturn("Start date cannot be greater than endDate");
+
         mockMvc.perform(MockMvcRequestBuilders.get("/hotels/name/myhotel1/date/start/" + LocalDate.now().plusDays(5) + "/end/" + LocalDate.now().plusDays(3)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("message").value("Start date cannot be greater than endDate"));
@@ -241,6 +252,7 @@ class HotelControllerTests {
     void testGetAvailabilityByNameAndRoomTypeAndDate_notFound() throws Exception {
         given(service.getAvailabilityByNameAndRoomTypeAndDateAndStatus(anyString(), anyString(), any(), any(), anyBoolean()))
                 .willReturn(null);
+        given(messages.getNoActiveHotelFound()).willReturn("Hotel name not found.");
 
         mockMvc.perform(MockMvcRequestBuilders.get("/hotels/name/myhotel1/roomType/double/date/start/"
                 + LocalDate.now().plusDays(1) + "/end/" + LocalDate.now().plusDays(5)))
@@ -260,6 +272,8 @@ class HotelControllerTests {
 
     @Test
     void testGetAvailabilityByNameAndRoomTypeAndDate_wrongStartDate() throws Exception {
+        given(messages.getStartDateLessThanToday()).willReturn("Start date cannot be less than today");
+
         mockMvc.perform(
                 MockMvcRequestBuilders
                         .get("/hotels/name/myhotel1/roomType/double/date/start/"
@@ -271,6 +285,8 @@ class HotelControllerTests {
 
     @Test
     void testGetAvailabilityByNameAndRoomTypeAndDate_wrongEndDate() throws Exception {
+        given(messages.getStartDateGreaterThanEnd()).willReturn("Start date cannot be greater than endDate");
+
         mockMvc.perform(MockMvcRequestBuilders.get("/hotels/name/myhotel1/roomType/double/date/start/"
                 + LocalDate.now().plusDays(5) + "/end/" + LocalDate.now().plusDays(3)))
                 .andExpect(status().isBadRequest())
@@ -349,6 +365,7 @@ class HotelControllerTests {
         bookingDto.setRoomType(room1.getRoomType());
         bookingDto.setStartDate(LocalDate.now().minusDays(1));
         bookingDto.setEndDate(LocalDate.now().plusDays(5));
+        given(messages.getStartDateLessThanToday()).willReturn("Start date cannot be less than today's date.");
 
         mockMvc.perform(MockMvcRequestBuilders
                 .post("/hotels/booking/bookingId")
@@ -365,6 +382,7 @@ class HotelControllerTests {
         bookingDto.setRoomType(room1.getRoomType());
         bookingDto.setStartDate(LocalDate.now().plusDays(10));
         bookingDto.setEndDate(LocalDate.now().plusDays(5));
+        given(messages.getStartDateGreaterThanEnd()).willReturn("Start date cannot be less than and equal to end date.");
 
         mockMvc.perform(MockMvcRequestBuilders
                 .post("/hotels/booking/bookingId")

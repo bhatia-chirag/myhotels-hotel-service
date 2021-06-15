@@ -30,8 +30,8 @@ class HotelServiceApplicationTests {
 	@Test
 	void testGetAllActiveHotels() {
 
-		ResponseEntity<List> entity = restTemplate.getForEntity("/hotels/", List.class);
-		assertEquals(HttpStatus.OK, entity.getStatusCode());
+		ResponseEntity<Object> entity = restTemplate.getForEntity("/hotels/", Object.class);
+		assertEquals(HttpStatus.NOT_FOUND, entity.getStatusCode());
 
 	}
 

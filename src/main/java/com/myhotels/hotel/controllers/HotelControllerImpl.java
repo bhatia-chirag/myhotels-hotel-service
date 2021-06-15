@@ -1,5 +1,6 @@
 package com.myhotels.hotel.controllers;
 
+import com.myhotels.hotel.configs.Messages;
 import com.myhotels.hotel.dtos.AvailabilityDto;
 import com.myhotels.hotel.dtos.BookingDto;
 import com.myhotels.hotel.dtos.HotelDto;
@@ -34,13 +35,15 @@ public class HotelControllerImpl implements HotelController {
     private HotelMapper hotelMapper;
     @Autowired
     private AvailabilityMapper availabilityMapper;
+    @Autowired
+    private Messages messages;
 
     @GetMapping("/")
     @Override
     public ResponseEntity<List<HotelDto>> getAllActiveHotels() {
         List<Hotel> hotels = service.getAllHotelsByStatus(true);
-        if (hotels == null) {
-            throw new DataNotFoundException("No hotel found.");
+        if (hotels == null || hotels.isEmpty()) {
+            throw new DataNotFoundException(messages.getNoHotelFound());
         } else {
             List<HotelDto> hotelDtos = hotels.stream()
                     .map(h -> hotelMapper.hotelToHotelDto(h))
@@ -54,7 +57,7 @@ public class HotelControllerImpl implements HotelController {
     public ResponseEntity<List<HotelDto>> getAllHotelsByStatus(@PathVariable(name = "active") boolean active) {
         List<Hotel> hotels = service.getAllHotelsByStatus(active);
         if (hotels == null || hotels.isEmpty()) {
-            throw new DataNotFoundException("No hotel found for specified value.");
+            throw new DataNotFoundException(messages.getHotelNameNotFound());
         }
         List<HotelDto> hotelDtos = hotels.stream()
                 .map(h -> hotelMapper.hotelToHotelDto(h))
@@ -67,7 +70,7 @@ public class HotelControllerImpl implements HotelController {
     public ResponseEntity<HotelDto> getHotelByName(@PathVariable(name = "name") String name) {
         Hotel hotel = service.getHotelByNameAndStatus(name, true);
         if (hotel == null) {
-            throw new DataNotFoundException("No active hotel found for name: " + name);
+            throw new DataNotFoundException(messages.getNoActiveHotelFound());
         }
         return ResponseEntity.ok(hotelMapper.hotelToHotelDto(hotel));
     }
@@ -77,14 +80,14 @@ public class HotelControllerImpl implements HotelController {
     public List<List<AvailabilityDto>> getAvailabilityByNameAndDate(@PathVariable("name") String name, @PathVariable("startDate") @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate startDate, @PathVariable("endDate") @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate endDate) {
         // TODO: Use validator for this
         if (startDate.isBefore(LocalDate.now())) {
-            throw new InvalidRequestException("Start date cannot be less than today");
+            throw new InvalidRequestException(messages.getStartDateLessThanToday());
         }
         if (startDate.isAfter(endDate)) {
-            throw new InvalidRequestException("Start date cannot be greater than endDate");
+            throw new InvalidRequestException(messages.getStartDateGreaterThanEnd());
         }
         List<List<Availability>> availabilityListsList = service.getAvailabilityByNameAndDateAndStatus(name, startDate, endDate, true);
         if (availabilityListsList == null || availabilityListsList.isEmpty()) {
-            throw new DataNotFoundException("Hotel data not found for specified details.");
+            throw new DataNotFoundException(messages.getNoActiveHotelFound());
         }
         return availabilityListsList.stream()
                 .map(availabilities -> availabilities.stream()
@@ -98,14 +101,14 @@ public class HotelControllerImpl implements HotelController {
     public List<AvailabilityDto> getAvailabilityByNameAndDateAndRoomType(@PathVariable("name") String name, @PathVariable("roomType") String roomType, @PathVariable("startDate") @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate startDate, @PathVariable("endDate") @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate endDate) {
         // TODO: Use validator for this
         if (startDate.isBefore(LocalDate.now())) {
-            throw new InvalidRequestException("Start date cannot be less than today");
+            throw new InvalidRequestException(messages.getStartDateLessThanToday());
         }
         if (startDate.isAfter(endDate)) {
-            throw new InvalidRequestException("Start date cannot be greater than endDate");
+            throw new InvalidRequestException(messages.getStartDateGreaterThanEnd());
         }
         List<Availability> availabilities = service.getAvailabilityByNameAndRoomTypeAndDateAndStatus(name, roomType, startDate, endDate, true);
         if (availabilities == null || availabilities.isEmpty()) {
-            throw new DataNotFoundException("Hotel name not found.");
+            throw new DataNotFoundException(messages.getNoActiveHotelFound());
         }
         return availabilities.stream()
                 .map(availability -> availabilityMapper.availabilityToAvailabilityDto(availability))
@@ -144,11 +147,11 @@ public class HotelControllerImpl implements HotelController {
         log.info("Creating booking for bookingId: "+bookingId);
         LocalDate startDate = bookingDto.getStartDate();
         if (startDate.isBefore(LocalDate.now())) {
-            throw new InvalidRequestException("Start date cannot be less than today's date.");
+            throw new InvalidRequestException(messages.getStartDateLessThanToday());
         }
         LocalDate endDate = bookingDto.getEndDate();
         if (endDate.isBefore(startDate) || endDate.isEqual(startDate)) {
-            throw new InvalidRequestException("Start date cannot be less than and equal to end date.");
+            throw new InvalidRequestException(messages.getStartDateGreaterThanEnd());
         }
         service.createBooking(bookingDto.getHotelName(), bookingDto.getRoomType(), startDate, endDate, true);
         return ResponseEntity.ok(bookingDto);
