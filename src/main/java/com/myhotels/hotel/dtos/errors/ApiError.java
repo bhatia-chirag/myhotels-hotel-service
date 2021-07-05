@@ -9,11 +9,11 @@ public class ApiError {
 
     private String message;
     private String rootCause;
-    private LocalDateTime dateTime;
+    private LocalDateTime timeStamp;
 
     public ApiError (String message, String rootCause) {
         this.message = message;
         this.rootCause = rootCause;
-        dateTime = LocalDateTime.now();
+        timeStamp = LocalDateTime.now();
     }
 }

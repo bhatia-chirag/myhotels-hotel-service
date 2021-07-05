@@ -3,6 +3,7 @@ package com.myhotels.hotel.controllers;
 import com.myhotels.hotel.configs.Messages;
 import com.myhotels.hotel.dtos.AvailabilityDto;
 import com.myhotels.hotel.dtos.BookingDto;
+import com.myhotels.hotel.dtos.HotelBookingDto;
 import com.myhotels.hotel.dtos.HotelDto;
 import com.myhotels.hotel.entities.Availability;
 import com.myhotels.hotel.entities.Hotel;
@@ -15,6 +16,7 @@ import lombok.extern.java.Log;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
@@ -37,6 +39,10 @@ public class HotelControllerImpl implements HotelController {
     private AvailabilityMapper availabilityMapper;
     @Autowired
     private Messages messages;
+    @Autowired
+    private KafkaTemplate<String, HotelBookingDto> kafkaTemplate;
+
+    private static final String TOPIC = "hotel_bookings";
 
     @GetMapping("/")
     @Override
@@ -65,10 +71,11 @@ public class HotelControllerImpl implements HotelController {
         return ResponseEntity.ok(hotelDtos);
     }
 
+
     @GetMapping("/name/{name}")
     @Override
     public ResponseEntity<HotelDto> getHotelByName(@PathVariable(name = "name") String name) {
-        Hotel hotel = service.getHotelByNameAndStatus(name, true);
+        var hotel = service.getHotelByNameAndStatus(name, true);
         if (hotel == null) {
             throw new DataNotFoundException(messages.getNoActiveHotelFound());
         }
@@ -118,9 +125,9 @@ public class HotelControllerImpl implements HotelController {
     @PostMapping("/add")
     @Override
     public ResponseEntity<HotelDto> addHotel(@RequestBody HotelDto requestHotelDto) {
-        Hotel requestHotel = hotelMapper.hotelDtoToHotel(requestHotelDto);
-        Hotel responseHotel = service.addHotel(requestHotel);
-        HotelDto responseDto = hotelMapper.hotelToHotelDto(responseHotel);
+        var requestHotel = hotelMapper.hotelDtoToHotel(requestHotelDto);
+        var responseHotel = service.addHotel(requestHotel);
+        var responseDto = hotelMapper.hotelToHotelDto(responseHotel);
         return ResponseEntity
                 .created(URI.create("/name/" + responseDto.getName()))
                 .body(responseDto);
@@ -130,7 +137,7 @@ public class HotelControllerImpl implements HotelController {
     @Override
     public ResponseEntity<HotelDto> editHotel(@PathVariable("name") String name,
                                               @RequestParam Map<String, String> params) {
-        Hotel updatedHotel = service.updateHotel(name, params);
+        var updatedHotel = service.updateHotel(name, params);
         return ResponseEntity.accepted().body(hotelMapper.hotelToHotelDto(updatedHotel));
     }
 
@@ -154,6 +161,13 @@ public class HotelControllerImpl implements HotelController {
             throw new InvalidRequestException(messages.getStartDateGreaterThanEnd());
         }
         service.createBooking(bookingDto.getHotelName(), bookingDto.getRoomType(), startDate, endDate, true);
+        var hotelBookingDto = new HotelBookingDto();
+        hotelBookingDto.setHotel(bookingDto.getHotelName());
+        hotelBookingDto.setBookingId(bookingId);
+        hotelBookingDto.setRoomType(bookingDto.getRoomType());
+        hotelBookingDto.setEndDate(endDate);
+        hotelBookingDto.setStartDate(startDate);
+        kafkaTemplate.send(TOPIC, hotelBookingDto );
         return ResponseEntity.ok(bookingDto);
     }
 }

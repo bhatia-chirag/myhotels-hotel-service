@@ -1,7 +1,5 @@
 package com.myhotels.hotel.controllers;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.json.UTF8JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.myhotels.hotel.configs.Messages;
 import com.myhotels.hotel.dtos.AvailabilityDto;
@@ -28,7 +26,6 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -90,7 +87,6 @@ class HotelControllerTests {
 
     @Test
     void testGetAllActiveHotels() throws Exception {
-
         given(service.getAllHotelsByStatus(anyBoolean())).willReturn(hotels);
         given(mapper.hotelToHotelDto(any())).willReturn(hotelDto);
 
@@ -111,7 +107,6 @@ class HotelControllerTests {
 
     @Test
     void testGetAllHotelsByStatus() throws Exception {
-
         given(service.getAllHotelsByStatus(anyBoolean())).willReturn(hotels);
         given(mapper.hotelToHotelDto(any())).willReturn(hotelDto);
 
